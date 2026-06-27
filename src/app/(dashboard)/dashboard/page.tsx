@@ -98,7 +98,7 @@ export default function DashboardPage() {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-[#f8f4f0] p-6 rounded-xl border border-[#c5c0b1] flex items-center justify-between">
+        <Link href="/stock" className="bg-[#f8f4f0] p-6 rounded-xl border border-[#c5c0b1] flex items-center justify-between hover:border-[#ff4f00] hover:shadow-sm transition cursor-pointer">
           <div>
             <span className="text-xs font-bold text-[#605d52] uppercase tracking-wider">Total Stock Items</span>
             <h3 className="text-3xl font-bold text-[#201515] mt-2">{data?.total_stock_items || 0}</h3>
@@ -106,9 +106,9 @@ export default function DashboardPage() {
           <div className="p-3 bg-white border border-[#c5c0b1] rounded-lg">
             <Boxes className="h-6 w-6 text-[#ff4f00]" />
           </div>
-        </div>
+        </Link>
 
-        <div className="bg-[#f8f4f0] p-6 rounded-xl border border-[#c5c0b1] flex items-center justify-between">
+        <Link href="/products" className="bg-[#f8f4f0] p-6 rounded-xl border border-[#c5c0b1] flex items-center justify-between hover:border-[#ff4f00] hover:shadow-sm transition cursor-pointer">
           <div>
             <span className="text-xs font-bold text-[#605d52] uppercase tracking-wider">Active Products</span>
             <h3 className="text-3xl font-bold text-[#201515] mt-2">{data?.total_products || 0}</h3>
@@ -116,9 +116,9 @@ export default function DashboardPage() {
           <div className="p-3 bg-white border border-[#c5c0b1] rounded-lg">
             <Package className="h-6 w-6 text-[#ff4f00]" />
           </div>
-        </div>
+        </Link>
 
-        <div className="bg-[#f8f4f0] p-6 rounded-xl border border-[#c5c0b1] flex items-center justify-between">
+        <Link href="/stock" className="bg-[#f8f4f0] p-6 rounded-xl border border-[#c5c0b1] flex items-center justify-between hover:border-[#ff4f00] hover:shadow-sm transition cursor-pointer">
           <div>
             <span className="text-xs font-bold text-[#605d52] uppercase tracking-wider">Low Stock Items</span>
             <h3 className="text-3xl font-bold text-[#201515] mt-2">{data?.low_stock_items || 0}</h3>
@@ -126,9 +126,9 @@ export default function DashboardPage() {
           <div className="p-3 bg-white border border-[#c5c0b1] rounded-lg">
             <AlertTriangle className={`h-6 w-6 ${(data?.low_stock_items || 0) > 0 ? 'text-red-500 animate-bounce' : 'text-[#605d52]'}`} />
           </div>
-        </div>
+        </Link>
 
-        <div className="bg-[#f8f4f0] p-6 rounded-xl border border-[#c5c0b1] flex items-center justify-between">
+        <Link href="/products-sold" className="bg-[#f8f4f0] p-6 rounded-xl border border-[#c5c0b1] flex items-center justify-between hover:border-[#ff4f00] hover:shadow-sm transition cursor-pointer">
           <div>
             <span className="text-xs font-bold text-[#605d52] uppercase tracking-wider">Sold Today</span>
             <h3 className="text-3xl font-bold text-[#201515] mt-2">{data?.sales_today || 0} boxes</h3>
@@ -136,7 +136,7 @@ export default function DashboardPage() {
           <div className="p-3 bg-white border border-[#c5c0b1] rounded-lg">
             <TrendingUp className="h-6 w-6 text-[#ff4f00]" />
           </div>
-        </div>
+        </Link>
       </div>
 
       {/* Activity Logs & Feeds */}
