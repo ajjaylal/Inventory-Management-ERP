@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { Search, Bell, User } from 'lucide-react';
+import { Search, User } from 'lucide-react';
 
 export default function TopBar() {
   const supabase = createClient();
@@ -44,11 +44,6 @@ export default function TopBar() {
 
       {/* User Actions */}
       <div className="flex items-center gap-6">
-        {/* Notifications */}
-        <button className="relative p-2 hover:bg-[#f8f4f0] rounded-full transition">
-          <Bell className="h-5 w-5 text-[#605d52]" />
-          <span className="absolute top-1 right-1 h-2.5 w-2.5 bg-[#ff4f00] rounded-full border-2 border-white"></span>
-        </button>
 
         {/* User Card */}
         <div className="flex items-center gap-3">
