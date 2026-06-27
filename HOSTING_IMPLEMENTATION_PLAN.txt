@@ -1,0 +1,45 @@
+# HOSTING IMPLEMENTATION PLAN: INVENTORY MANAGEMENT SYSTEM
+
+## 1. Architecture Overview
+Currently, your application uses a decoupled architecture:
+*   **Backend (Supabase):** Database, Authentication, and APIs. Your project is already hosted on the Supabase cloud (`ovrhignqmdwtybxtwxsr.supabase.co`).
+*   **Frontend (Next.js):** The user interface currently running locally on your machine.
+
+**Important Clarification:** Supabase is a Backend-as-a-Service and does *not* host full-stack Next.js frontend websites. To make your website accessible on the internet, we must deploy the Next.js frontend to a dedicated hosting platform optimized for it, such as **Vercel** (the creators of Next.js, highly recommended), Netlify, or Render.
+
+## 2. Phase 1: Pre-Deployment Preparation
+Before deploying, we need to ensure the codebase is ready and securely stored.
+1.  **Version Control (Git):** If not already done, initialize a Git repository in your project folder and commit all code.
+2.  **Push to GitHub:** Create a new repository on GitHub (or GitLab/Bitbucket) and push your local code there. Hosting platforms will pull the code directly from this repository to build the website.
+3.  **Build Verification:** We have already verified that the command `npm run build` succeeds without errors, meaning the code is production-ready.
+
+## 3. Phase 2: Supabase Production Configuration
+Since your backend is already on Supabase, we only need to update a few settings to accept connections from your new live website.
+1.  **Auth Redirect URLs:** 
+    *   Go to your Supabase Dashboard -> Authentication -> URL Configuration.
+    *   Set the **Site URL** to your new live domain (e.g., `https://your-app-name.vercel.app`).
+    *   Add the live domain to the **Redirect URIs** list so login/logout works securely.
+2.  **Security Review:** Ensure all database tables have proper Row Level Security (RLS) enabled. We have already configured and tested these policies, but a final check is recommended before public launch.
+
+## 4. Phase 3: Frontend Deployment (via Vercel)
+Vercel provides the easiest and most robust hosting for Next.js applications.
+1.  **Create Account:** Sign up for a free Vercel account (vercel.com) using your GitHub account.
+2.  **Import Project:** In the Vercel dashboard, click "Add New Project" and select your Inventory Management repository from GitHub.
+3.  **Configure Environment Variables:** Before clicking deploy, you MUST add your Supabase credentials to Vercel's Environment Variables section so the live app can talk to the database:
+    *   `NEXT_PUBLIC_SUPABASE_URL` = `https://ovrhignqmdwtybxtwxsr.supabase.co`
+    *   `NEXT_PUBLIC_SUPABASE_ANON_KEY` = `[Your Anon Key]`
+4.  **Deploy:** Click Deploy. Vercel will build the app and assign it a live URL (e.g., `https://lawz-gifts-inventory.vercel.app`).
+5.  **Custom Domain (Optional):** You can later link a custom domain (like `inventory.lawzgifts.com`) in the Vercel project settings.
+
+## 5. Phase 4: Post-Deployment Verification
+Once the deployment finishes and you have your live URL:
+1.  Update the Supabase Auth settings with this new URL (as mentioned in Phase 2).
+2.  Visit the live URL in your browser.
+3.  Perform a full end-to-end test:
+    *   Log in with your admin credentials.
+    *   Add a new stock item.
+    *   Record a mock sale.
+    *   Verify the dashboard stats update correctly.
+
+## Next Steps
+If you are ready to proceed, please push your code to a GitHub repository. Let me know if you need assistance with setting up Git, connecting to GitHub, or configuring the deployment on Vercel!
