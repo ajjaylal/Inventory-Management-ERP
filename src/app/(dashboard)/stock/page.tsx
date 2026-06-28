@@ -17,6 +17,7 @@ import {
 import CreateStockItemModal from '@/components/stock/CreateStockItemModal';
 import RecordTransactionModal from '@/components/stock/RecordTransactionModal';
 import TransactionHistoryModal from '@/components/stock/TransactionHistoryModal';
+import { useUserRole } from '@/hooks/useUserRole';
 
 interface StockItem {
   id: string;
@@ -41,6 +42,7 @@ interface UOM {
 
 export default function StockPage() {
   const supabase = createClient();
+  const { isAdmin } = useUserRole();
   const [stockItems, setStockItems] = useState<StockItem[]>([]);
   const [uoms, setUoms] = useState<UOM[]>([]);
   const [loading, setLoading] = useState(true);
@@ -118,17 +120,18 @@ export default function StockPage() {
           <p className="text-sm text-[#605d52] mt-1">Manage raw materials & ingredients</p>
         </div>
         <div className="flex gap-3">
-          <button
-            onClick={() => {
-              setSelectedItem(null);
-              setIsCreateOpen(true);
-            }}
-            className="flex items-center gap-2 px-4 py-2.5 bg-[#ff4f00] hover:bg-[#e04500] text-white text-sm font-semibold rounded-lg shadow-sm transition"
-          >
-            <Plus className="h-4 w-4" />
-            Add Stock Item
-          </button>
-        </div>
+          {isAdmin && (
+            <button
+              onClick={() => {
+                setSelectedItem(null);
+                setIsCreateOpen(true);
+              }}
+              className="flex items-center gap-2 px-4 py-2.5 bg-[#ff4f00] hover:bg-[#e04500] text-white text-sm font-semibold rounded-lg shadow-sm transition"
+            >
+              <Plus className="h-4 w-4" />
+              Add Stock Item
+            </button>
+          )}
       </div>
 
       {/* Filter Toolbar */}
@@ -238,16 +241,18 @@ export default function StockPage() {
                         </span>
                       </td>
                       <td className="py-4 px-6 text-right space-x-2">
-                        <button
-                          onClick={() => {
-                            setSelectedItem(item);
-                            setIsCreateOpen(true);
-                          }}
-                          title="Edit Item"
-                          className="p-1.5 hover:bg-[#f8f4f0] rounded-lg border border-[#c5c0b1] transition inline-flex"
-                        >
-                          <Edit2 className="h-3.5 w-3.5 text-[#605d52]" />
-                        </button>
+                        {isAdmin && (
+                          <button
+                            onClick={() => {
+                              setSelectedItem(item);
+                              setIsCreateOpen(true);
+                            }}
+                            title="Edit Item"
+                            className="p-1.5 hover:bg-[#f8f4f0] rounded-lg border border-[#c5c0b1] transition inline-flex"
+                          >
+                            <Edit2 className="h-3.5 w-3.5 text-[#605d52]" />
+                          </button>
+                        )}
                         <button
                           onClick={() => {
                             setSelectedItem(item);
@@ -268,28 +273,32 @@ export default function StockPage() {
                         >
                           <History className="h-3.5 w-3.5 text-[#605d52]" />
                         </button>
-                        <button
-                          onClick={() => toggleStatus(item)}
-                          className={`text-xs font-semibold px-2 py-1.5 rounded-lg border transition ${
-                            item.status === 'Active' 
-                              ? 'border-red-200 text-red-600 hover:bg-red-50' 
-                              : 'border-green-200 text-green-600 hover:bg-green-50'
-                          }`}
-                        >
-                          {item.status === 'Active' ? 'Deactivate' : 'Activate'}
-                        </button>
-                        <button
-                          onClick={async () => {
-                            if (!confirm('Are you sure you want to delete this item?')) return;
-                            const { error } = await supabase.from('stock_items').delete().eq('id', item.id);
-                            if (error) alert('Cannot delete — ledger entries exist. Please deactivate instead.');
-                            else fetchData();
-                          }}
-                          title="Delete Item"
-                          className="p-1.5 hover:bg-red-50 hover:text-red-700 rounded-lg border border-[#c5c0b1] hover:border-red-200 transition inline-flex"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </button>
+                        {isAdmin && (
+                          <button
+                            onClick={() => toggleStatus(item)}
+                            className={`text-xs font-semibold px-2 py-1.5 rounded-lg border transition ${
+                              item.status === 'Active' 
+                                ? 'border-red-200 text-red-600 hover:bg-red-50' 
+                                : 'border-green-200 text-green-600 hover:bg-green-50'
+                            }`}
+                          >
+                            {item.status === 'Active' ? 'Deactivate' : 'Activate'}
+                          </button>
+                        )}
+                        {isAdmin && (
+                          <button
+                            onClick={async () => {
+                              if (!confirm('Are you sure you want to delete this item?')) return;
+                              const { error } = await supabase.from('stock_items').delete().eq('id', item.id);
+                              if (error) alert('Cannot delete — ledger entries exist. Please deactivate instead.');
+                              else fetchData();
+                            }}
+                            title="Delete Item"
+                            className="p-1.5 hover:bg-red-50 hover:text-red-700 rounded-lg border border-[#c5c0b1] hover:border-red-200 transition inline-flex"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        )}
                       </td>
                     </tr>
                   );

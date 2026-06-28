@@ -6,6 +6,7 @@ import React, { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { Plus, Search, Trash2, Edit2, Copy } from 'lucide-react';
 import CreateProductModal from '@/components/products/CreateProductModal';
+import { useUserRole } from '@/hooks/useUserRole';
 
 interface Product {
   id: string;
@@ -27,6 +28,7 @@ interface Product {
 
 export default function ProductsPage() {
   const supabase = createClient();
+  const { isAdmin } = useUserRole();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchInput, setSearchInput] = useState('');
@@ -109,17 +111,19 @@ export default function ProductsPage() {
           <h1 className="text-3xl font-extrabold text-[#201515] tracking-tight">Product Catalog (BOM)</h1>
           <p className="text-sm text-[#605d52] mt-1">Manage finished gift boxes and recipes</p>
         </div>
-        <button
-          onClick={() => {
-            setSelectedProduct(null);
-            setIsDuplicate(false);
-            setIsModalOpen(true);
-          }}
-          className="flex items-center gap-2 px-4 py-2.5 bg-[#ff4f00] hover:bg-[#e04500] text-white text-sm font-semibold rounded-lg shadow-sm transition"
-        >
-          <Plus className="h-4 w-4" />
-          Create Product
-        </button>
+        {isAdmin && (
+          <button
+            onClick={() => {
+              setSelectedProduct(null);
+              setIsDuplicate(false);
+              setIsModalOpen(true);
+            }}
+            className="flex items-center gap-2 px-4 py-2.5 bg-[#ff4f00] hover:bg-[#e04500] text-white text-sm font-semibold rounded-lg shadow-sm transition"
+          >
+            <Plus className="h-4 w-4" />
+            Create Product
+          </button>
+        )}
       </div>
 
       {/* Filter Toolbar */}
@@ -204,35 +208,41 @@ export default function ProductsPage() {
                       </span>
                     </td>
                     <td className="py-4 px-6 text-right space-x-2">
-                      <button
-                        onClick={() => {
-                          setSelectedProduct(p);
-                          setIsDuplicate(false);
-                          setIsModalOpen(true);
-                        }}
-                        title="Edit Product & BOM"
-                        className="p-1.5 hover:bg-[#f8f4f0] rounded-lg border border-[#c5c0b1] transition inline-flex"
-                      >
-                        <Edit2 className="h-3.5 w-3.5 text-[#605d52]" />
-                      </button>
-                      <button
-                        onClick={() => {
-                          setSelectedProduct(p);
-                          setIsDuplicate(true);
-                          setIsModalOpen(true);
-                        }}
-                        title="Duplicate Recipe"
-                        className="p-1.5 hover:bg-[#f8f4f0] rounded-lg border border-[#c5c0b1] transition inline-flex"
-                      >
-                        <Copy className="h-3.5 w-3.5 text-[#ff4f00]" />
-                      </button>
-                      <button
-                        onClick={() => archiveProduct(p.id)}
-                        title="Archive Product"
-                        className="p-1.5 hover:bg-red-50 hover:text-red-700 rounded-lg border border-red-200 transition inline-flex"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
+                      {isAdmin && (
+                        <button
+                          onClick={() => {
+                            setSelectedProduct(p);
+                            setIsDuplicate(false);
+                            setIsModalOpen(true);
+                          }}
+                          title="Edit Product & BOM"
+                          className="p-1.5 hover:bg-[#f8f4f0] rounded-lg border border-[#c5c0b1] transition inline-flex"
+                        >
+                          <Edit2 className="h-3.5 w-3.5 text-[#605d52]" />
+                        </button>
+                      )}
+                      {isAdmin && (
+                        <button
+                          onClick={() => {
+                            setSelectedProduct(p);
+                            setIsDuplicate(true);
+                            setIsModalOpen(true);
+                          }}
+                          title="Duplicate Recipe"
+                          className="p-1.5 hover:bg-[#f8f4f0] rounded-lg border border-[#c5c0b1] transition inline-flex"
+                        >
+                          <Copy className="h-3.5 w-3.5 text-[#ff4f00]" />
+                        </button>
+                      )}
+                      {isAdmin && (
+                        <button
+                          onClick={() => archiveProduct(p.id)}
+                          title="Archive Product"
+                          className="p-1.5 hover:bg-red-50 hover:text-red-700 rounded-lg border border-red-200 transition inline-flex"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))}

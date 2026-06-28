@@ -6,6 +6,7 @@ import React, { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { Plus, Search, Trash2, Edit2 } from 'lucide-react';
 import RecordSaleModal from '@/components/sales/RecordSaleModal';
+import { useUserRole } from '@/hooks/useUserRole';
 
 interface Sale {
   id: string;
@@ -29,6 +30,7 @@ interface Sale {
 
 export default function ProductsSoldPage() {
   const supabase = createClient();
+  const { isAdmin } = useUserRole();
   const [sales, setSales] = useState<Sale[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchInput, setSearchInput] = useState('');
@@ -194,23 +196,27 @@ export default function ProductsSoldPage() {
                         {currencySymbol === 'AED' ? `AED ${revenue.toFixed(2)}` : `${currencySymbol}${revenue.toFixed(2)}`}
                       </td>
                       <td className="py-4 px-6 text-right space-x-2">
-                        <button
-                          onClick={() => {
-                            setSelectedSale(s);
-                            setIsModalOpen(true);
-                          }}
-                          title="Edit Sale"
-                          className="p-1.5 hover:bg-[#f8f4f0] rounded-lg border border-[#c5c0b1] transition inline-flex"
-                        >
-                          <Edit2 className="h-3.5 w-3.5 text-[#605d52]" />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(s)}
-                          title="Delete Sale / Restore Inventory"
-                          className="p-1.5 hover:bg-red-50 hover:text-red-700 rounded-lg border border-red-200 transition inline-flex"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </button>
+                        {isAdmin && (
+                          <button
+                            onClick={() => {
+                              setSelectedSale(s);
+                              setIsModalOpen(true);
+                            }}
+                            title="Edit Sale"
+                            className="p-1.5 hover:bg-[#f8f4f0] rounded-lg border border-[#c5c0b1] transition inline-flex"
+                          >
+                            <Edit2 className="h-3.5 w-3.5 text-[#605d52]" />
+                          </button>
+                        )}
+                        {isAdmin && (
+                          <button
+                            onClick={() => handleDelete(s)}
+                            title="Delete Sale / Restore Inventory"
+                            className="p-1.5 hover:bg-red-50 hover:text-red-700 rounded-lg border border-red-200 transition inline-flex"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        )}
                       </td>
                     </tr>
                   );

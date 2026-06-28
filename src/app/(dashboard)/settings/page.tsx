@@ -5,9 +5,11 @@ export const dynamic = 'force-dynamic';
 import React, { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { Save, Lock, Building } from 'lucide-react';
+import { useUserRole } from '@/hooks/useUserRole';
 
 export default function SettingsPage() {
   const supabase = createClient();
+  const { isAdmin } = useUserRole();
   const [loading, setLoading] = useState(false);
   const [profileId, setProfileId] = useState('');
   const [fullName, setFullName] = useState('');
@@ -15,16 +17,16 @@ export default function SettingsPage() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   
-  // Organization settings
+  // Organization settings (from DB)
   const [companyName, setCompanyName] = useState('LAWZ GIFTS');
-  const [currency, setCurrency] = useState('USD ($)');
-  const [timezone, setTimezone] = useState('UTC');
+  const [currency, setCurrency] = useState('AED (AED)');
+  const [timezone, setTimezone] = useState('Asia/Dubai');
 
   const [message, setMessage] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   useEffect(() => {
-    const loadProfile = async () => {
+    const loadAll = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         setProfileId(user.id);
@@ -38,31 +40,49 @@ export default function SettingsPage() {
           setFullName(profile.full_name);
         }
       }
-    };
-    loadProfile();
 
-    if (typeof window !== 'undefined') {
-      const savedCompany = localStorage.getItem('companyName');
-      const savedCurrency = localStorage.getItem('currency');
-      const savedTimezone = localStorage.getItem('timezone');
-      if (savedCompany) setCompanyName(savedCompany);
-      if (savedCurrency) setCurrency(savedCurrency);
-      if (savedTimezone) setTimezone(savedTimezone);
-    }
+      // Load org settings from DB
+      const { data: settings } = await supabase
+        .from('app_settings')
+        .select('company_name, currency, timezone')
+        .eq('id', 1)
+        .single();
+      if (settings) {
+        setCompanyName(settings.company_name);
+        setCurrency(settings.currency);
+        setTimezone(settings.timezone);
+        // Also sync to localStorage for Sidebar to pick up immediately
+        localStorage.setItem('companyName', settings.company_name);
+        localStorage.setItem('currency', settings.currency);
+        localStorage.setItem('timezone', settings.timezone);
+      }
+    };
+    loadAll();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleSaveOrgSettings = (e: React.FormEvent) => {
+  const handleSaveOrgSettings = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg(null);
     setMessage(null);
-    if (typeof window !== 'undefined') {
+    setLoading(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      const { error } = await supabase
+        .from('app_settings')
+        .update({ company_name: companyName, currency, timezone, updated_by: user?.id })
+        .eq('id', 1);
+      if (error) throw error;
+      // Sync to localStorage so Sidebar updates immediately in this session
       localStorage.setItem('companyName', companyName);
       localStorage.setItem('currency', currency);
       localStorage.setItem('timezone', timezone);
-      setMessage('Organization settings saved successfully.');
-      // Dispatch custom event to notify Sidebar in the same window
       window.dispatchEvent(new Event('settingsUpdated'));
+      setMessage('Organization settings saved successfully.');
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Failed to save settings.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -95,6 +115,12 @@ export default function SettingsPage() {
 
     if (password !== confirmPassword) {
       setErrorMsg('Passwords do not match.');
+      setLoading(false);
+      return;
+    }
+
+    if (password.length < 8) {
+      setErrorMsg('Password must be at least 8 characters long.');
       setLoading(false);
       return;
     }
@@ -187,11 +213,12 @@ export default function SettingsPage() {
           <form onSubmit={handleChangePassword} className="space-y-4">
             <div>
               <label className="block text-xs font-bold text-[#605d52] uppercase tracking-wider mb-2">
-                New Password *
+                New Password * (min. 8 characters)
               </label>
               <input
                 type="password"
                 required
+                minLength={8}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full px-4 py-2 border border-[#c5c0b1] rounded-lg text-sm bg-white text-[#201515] focus:outline-none"
@@ -206,6 +233,7 @@ export default function SettingsPage() {
               <input
                 type="password"
                 required
+                minLength={8}
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 className="w-full px-4 py-2 border border-[#c5c0b1] rounded-lg text-sm bg-white text-[#201515] focus:outline-none"
@@ -225,70 +253,73 @@ export default function SettingsPage() {
         </div>
       </div>
 
-      {/* System Configurations */}
-      <form onSubmit={handleSaveOrgSettings} className="bg-white border border-[#c5c0b1] rounded-xl p-6 shadow-sm space-y-6">
-        <div className="border-b border-[#c5c0b1] pb-4 flex justify-between items-center">
-          <div>
-            <h3 className="font-bold text-[#201515]">Localization & Organization Settings</h3>
-            <p className="text-xs text-[#605d52] mt-1">Configure company profile, currency display, and timezone.</p>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div>
-            <label className="block text-xs font-bold text-[#605d52] uppercase tracking-wider mb-2">
-              Company Name
-            </label>
-            <input
-              type="text"
-              required
-              value={companyName}
-              onChange={(e) => setCompanyName(e.target.value)}
-              className="w-full px-4 py-2 border border-[#c5c0b1] rounded-lg text-sm bg-white text-[#201515] focus:outline-none focus:ring-1 focus:ring-[#ff4f00]"
-            />
+      {/* System Configurations — Admin only */}
+      {isAdmin && (
+        <form onSubmit={handleSaveOrgSettings} className="bg-white border border-[#c5c0b1] rounded-xl p-6 shadow-sm space-y-6">
+          <div className="border-b border-[#c5c0b1] pb-4 flex justify-between items-center">
+            <div>
+              <h3 className="font-bold text-[#201515]">Localization & Organization Settings</h3>
+              <p className="text-xs text-[#605d52] mt-1">Configure company profile, currency display, and timezone.</p>
+            </div>
           </div>
 
-          <div>
-            <label className="block text-xs font-bold text-[#605d52] uppercase tracking-wider mb-2">
-              Primary Currency
-            </label>
-            <select
-              value={currency}
-              onChange={(e) => setCurrency(e.target.value)}
-              className="w-full px-4 py-2 border border-[#c5c0b1] rounded-lg text-sm bg-white text-[#201515] focus:outline-none focus:ring-1 focus:ring-[#ff4f00]"
-            >
-              <option value="USD ($)">USD ($)</option>
-              <option value="EUR (€)">EUR (€)</option>
-              <option value="GBP (£)">GBP (£)</option>
-              <option value="AED (AED)">AED (AED)</option>
-            </select>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div>
+              <label className="block text-xs font-bold text-[#605d52] uppercase tracking-wider mb-2">
+                Company Name
+              </label>
+              <input
+                type="text"
+                required
+                value={companyName}
+                onChange={(e) => setCompanyName(e.target.value)}
+                className="w-full px-4 py-2 border border-[#c5c0b1] rounded-lg text-sm bg-white text-[#201515] focus:outline-none focus:ring-1 focus:ring-[#ff4f00]"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-[#605d52] uppercase tracking-wider mb-2">
+                Primary Currency
+              </label>
+              <select
+                value={currency}
+                onChange={(e) => setCurrency(e.target.value)}
+                className="w-full px-4 py-2 border border-[#c5c0b1] rounded-lg text-sm bg-white text-[#201515] focus:outline-none focus:ring-1 focus:ring-[#ff4f00]"
+              >
+                <option value="USD ($)">USD ($)</option>
+                <option value="EUR (€)">EUR (€)</option>
+                <option value="GBP (£)">GBP (£)</option>
+                <option value="AED (AED)">AED (AED)</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-[#605d52] uppercase tracking-wider mb-2">
+                Timezone
+              </label>
+              <select
+                value={timezone}
+                onChange={(e) => setTimezone(e.target.value)}
+                className="w-full px-4 py-2 border border-[#c5c0b1] rounded-lg text-sm bg-white text-[#201515] focus:outline-none focus:ring-1 focus:ring-[#ff4f00]"
+              >
+                <option value="UTC">UTC (Coordinated Universal Time)</option>
+                <option value="GMT">GMT (Greenwich Mean Time)</option>
+                <option value="EST">EST (Eastern Standard Time)</option>
+                <option value="Asia/Dubai">Asia/Dubai (GST - Gulf Standard Time)</option>
+              </select>
+            </div>
           </div>
 
-          <div>
-            <label className="block text-xs font-bold text-[#605d52] uppercase tracking-wider mb-2">
-              Timezone
-            </label>
-            <select
-              value={timezone}
-              onChange={(e) => setTimezone(e.target.value)}
-              className="w-full px-4 py-2 border border-[#c5c0b1] rounded-lg text-sm bg-white text-[#201515] focus:outline-none focus:ring-1 focus:ring-[#ff4f00]"
-            >
-              <option value="UTC">UTC (Coordinated Universal Time)</option>
-              <option value="GMT">GMT (Greenwich Mean Time)</option>
-              <option value="EST">EST (Eastern Standard Time)</option>
-              <option value="Asia/Dubai">Asia/Dubai (GST - Gulf Standard Time)</option>
-            </select>
-          </div>
-        </div>
-
-        <button
-          type="submit"
-          className="flex items-center gap-2 px-4 py-2 bg-[#ff4f00] hover:bg-[#e04500] text-white text-sm font-semibold rounded-lg shadow-sm transition"
-        >
-          <Save className="h-4 w-4" />
-          Save Organization Settings
-        </button>
-      </form>
+          <button
+            type="submit"
+            disabled={loading}
+            className="flex items-center gap-2 px-4 py-2 bg-[#ff4f00] hover:bg-[#e04500] text-white text-sm font-semibold rounded-lg shadow-sm transition disabled:opacity-50"
+          >
+            <Save className="h-4 w-4" />
+            Save Organization Settings
+          </button>
+        </form>
+      )}
     </div>
   );
 }

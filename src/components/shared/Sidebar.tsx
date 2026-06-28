@@ -30,23 +30,37 @@ export default function Sidebar() {
   const [companyName, setCompanyName] = React.useState('LAWZ GIFTS');
 
   React.useEffect(() => {
+    // Load from localStorage first for instant display
     if (typeof window !== 'undefined') {
-      const savedCompany = localStorage.getItem('companyName');
-      if (savedCompany) {
-        setCompanyName(savedCompany);
-      }
-      
-      const handleStorageChange = () => {
-        const updatedCompany = localStorage.getItem('companyName');
-        if (updatedCompany) setCompanyName(updatedCompany);
-      };
-      window.addEventListener('storage', handleStorageChange);
-      window.addEventListener('settingsUpdated', handleStorageChange);
-      return () => {
-        window.removeEventListener('storage', handleStorageChange);
-        window.removeEventListener('settingsUpdated', handleStorageChange);
-      };
+      const saved = localStorage.getItem('companyName');
+      if (saved) setCompanyName(saved);
     }
+    // Then fetch from DB (source of truth)
+    const fetchSettings = async () => {
+      const { data } = await supabase
+        .from('app_settings')
+        .select('company_name')
+        .eq('id', 1)
+        .single();
+      if (data?.company_name) {
+        setCompanyName(data.company_name);
+        localStorage.setItem('companyName', data.company_name);
+      }
+    };
+    fetchSettings();
+
+    // Listen for in-session updates from the settings page
+    const handleSettingsChange = () => {
+      const updated = localStorage.getItem('companyName');
+      if (updated) setCompanyName(updated);
+    };
+    window.addEventListener('storage', handleSettingsChange);
+    window.addEventListener('settingsUpdated', handleSettingsChange);
+    return () => {
+      window.removeEventListener('storage', handleSettingsChange);
+      window.removeEventListener('settingsUpdated', handleSettingsChange);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const logoInitial = companyName.trim().charAt(0).toUpperCase() || 'L';
