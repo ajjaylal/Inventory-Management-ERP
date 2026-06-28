@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { Search, User } from 'lucide-react';
+import { User } from 'lucide-react';
 
 export default function TopBar() {
   const supabase = createClient();
@@ -29,19 +29,7 @@ export default function TopBar() {
   }, []);
 
   return (
-    <header className="h-16 border-b border-[#c5c0b1] bg-white flex items-center justify-between px-8 sticky top-0 z-10">
-      {/* Search Input */}
-      <div className="relative w-96">
-        <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-          <Search className="h-4 w-4 text-[#939084]" />
-        </span>
-        <input
-          type="text"
-          placeholder="Global search stock, products, invoices..."
-          className="w-full pl-10 pr-4 py-2 border border-[#c5c0b1] rounded-lg text-sm bg-[#fffefb] text-[#201515] placeholder-[#939084] focus:outline-none focus:ring-1 focus:ring-[#ff4f00] focus:border-[#ff4f00]"
-        />
-      </div>
-
+    <header className="h-16 border-b border-[#c5c0b1] bg-white flex items-center justify-end px-8 sticky top-0 z-10">
       {/* User Actions */}
       <div className="flex items-center gap-6">
 

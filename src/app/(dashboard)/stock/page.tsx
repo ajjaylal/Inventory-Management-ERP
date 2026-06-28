@@ -42,6 +42,7 @@ export default function StockPage() {
   const [stockItems, setStockItems] = useState<StockItem[]>([]);
   const [uoms, setUoms] = useState<UOM[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchInput, setSearchInput] = useState('');
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
@@ -131,17 +132,26 @@ export default function StockPage() {
       {/* Filter Toolbar */}
       <div className="flex flex-col md:flex-row gap-4 bg-[#f8f4f0] p-4 rounded-xl border border-[#c5c0b1]">
         {/* Search */}
-        <div className="relative flex-1">
-          <span className="absolute inset-y-0 left-0 flex items-center pl-3">
-            <Search className="h-4 w-4 text-[#939084]" />
-          </span>
-          <input
-            type="text"
-            placeholder="Search item name or category..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-[#c5c0b1] rounded-lg text-sm bg-white text-[#201515] focus:outline-none focus:ring-1 focus:ring-[#ff4f00]"
-          />
+        <div className="relative flex-1 flex gap-2">
+          <div className="relative flex-1">
+            <span className="absolute inset-y-0 left-0 flex items-center pl-3">
+              <Search className="h-4 w-4 text-[#939084]" />
+            </span>
+            <input
+              type="text"
+              placeholder="Search item name or category..."
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') setSearch(searchInput); }}
+              className="w-full pl-10 pr-4 py-2 border border-[#c5c0b1] rounded-lg text-sm bg-white text-[#201515] focus:outline-none focus:ring-1 focus:ring-[#ff4f00]"
+            />
+          </div>
+          <button
+            onClick={() => setSearch(searchInput)}
+            className="px-4 py-2 bg-[#ff4f00] hover:bg-[#e04500] text-white text-sm font-semibold rounded-lg transition"
+          >
+            Go
+          </button>
         </div>
 
         {/* Category Filter */}
